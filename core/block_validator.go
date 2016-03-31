@@ -43,13 +43,15 @@ var (
 type BlockValidator struct {
 	bc  *BlockChain // Canonical block chain
 	Pow pow.PoW     // Proof of work used for validating
+	trustedMiners []common.Address // Trusted miner addresses
 }
 
 // NewBlockValidator returns a new block validator which is safe for re-use
-func NewBlockValidator(blockchain *BlockChain, pow pow.PoW) *BlockValidator {
+func NewBlockValidator(blockchain *BlockChain, pow pow.PoW, trustedMiners [] common.Address) *BlockValidator {
 	validator := &BlockValidator{
 		Pow: pow,
 		bc:  blockchain,
+		trustedMiners: trustedMiners,
 	}
 	return validator
 }
@@ -80,7 +82,7 @@ func (v *BlockValidator) ValidateBlock(block *types.Block) error {
 
 	header := block.Header()
 	// validate the block header
-	if err := ValidateHeader(v.Pow, header, parent.Header(), false, false); err != nil {
+	if err := v.ValidateHeader(header, parent.Header(), false); err != nil {
 		return err
 	}
 	// verify the uncles are correctly rewarded
@@ -194,6 +196,18 @@ func (v *BlockValidator) ValidateHeader(header, parent *types.Header, checkPow b
 	// Short circuit if the header's already known or its parent missing
 	if v.bc.HasHeader(header.Hash()) {
 		return nil
+	}
+    // Check block miner
+	if len(v.trustedMiners) > 0 {
+		addressIsTrusted := false
+		for _,minerAddress := range v.trustedMiners {
+			if minerAddress == header.Coinbase {
+				addressIsTrusted = true
+			}
+		}
+		if !addressIsTrusted {
+			return fmt.Errorf("Untrusted coinbase address %v", header.Coinbase)
+		}
 	}
 	return ValidateHeader(v.Pow, header, parent, checkPow, false)
 }

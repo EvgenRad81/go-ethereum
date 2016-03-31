@@ -125,6 +125,10 @@ var (
 		Name:  "genesis",
 		Usage: "Insert/overwrite the genesis block (JSON format)",
 	}
+	TrustedMinersFileFlag = cli.StringFlag{
+		Name:  "trusted-miners",
+		Usage: "Insert the trusted miners address list (JSON format)",
+	}
 	IdentityFlag = cli.StringFlag{
 		Name:  "identity",
 		Usage: "Custom node name",
@@ -429,6 +433,7 @@ func MakeEthConfig(clientID, version string, ctx *cli.Context) *eth.Config {
 		Name:                    common.MakeName(clientID, version),
 		DataDir:                 MustDataDir(ctx),
 		GenesisFile:             ctx.GlobalString(GenesisFileFlag.Name),
+		TrustedMinersFile:       ctx.GlobalString(TrustedMinersFileFlag.Name),
 		FastSync:                ctx.GlobalBool(FastSyncFlag.Name),
 		BlockChainVersion:       ctx.GlobalInt(BlockchainVersionFlag.Name),
 		DatabaseCache:           ctx.GlobalInt(CacheFlag.Name),
@@ -554,7 +559,17 @@ func MakeChain(ctx *cli.Context) (chain *core.BlockChain, chainDb ethdb.Database
 	eventMux := new(event.TypeMux)
 	pow := ethash.New()
 	//genesis := core.GenesisBlock(uint64(ctx.GlobalInt(GenesisNonceFlag.Name)), blockDB)
-	chain, err = core.NewBlockChain(chainDb, pow, eventMux)
+	trustedMiners := []common.Address{}
+	if len(ctx.GlobalString(TrustedMinersFileFlag.Name)) > 0 {
+		fr, err := os.Open(ctx.GlobalString(TrustedMinersFileFlag.Name))
+		if err == nil {
+			trustedMiners, err := core.ReadTrustedMiners(fr)
+			if err == nil {
+				glog.V(logger.Info).Infof("F: Successfully read trusted miners: = %v\n", trustedMiners)
+			}
+		}
+	}
+	chain, err = core.NewBlockChain(chainDb, pow, eventMux, trustedMiners)
 	if err != nil {
 		Fatalf("Could not start chainmanager: %v", err)
 	}

@@ -118,7 +118,7 @@ type BlockChain struct {
 // NewBlockChain returns a fully initialised block chain using information
 // available in the database. It initialiser the default Ethereum Validator and
 // Processor.
-func NewBlockChain(chainDb ethdb.Database, pow pow.PoW, mux *event.TypeMux) (*BlockChain, error) {
+func NewBlockChain(chainDb ethdb.Database, pow pow.PoW, mux *event.TypeMux, trustedMiners []common.Address) (*BlockChain, error) {
 	headerCache, _ := lru.New(headerCacheLimit)
 	bodyCache, _ := lru.New(bodyCacheLimit)
 	bodyRLPCache, _ := lru.New(bodyCacheLimit)
@@ -144,7 +144,7 @@ func NewBlockChain(chainDb ethdb.Database, pow pow.PoW, mux *event.TypeMux) (*Bl
 		return nil, err
 	}
 	bc.rand = mrand.New(mrand.NewSource(seed.Int64()))
-	bc.SetValidator(NewBlockValidator(bc, pow))
+	bc.SetValidator(NewBlockValidator(bc, pow, trustedMiners))
 	bc.SetProcessor(NewStateProcessor(bc))
 
 	bc.genesisBlock = bc.GetBlockByNumber(0)

@@ -94,6 +94,7 @@ type Config struct {
 	NetworkId    int
 	GenesisFile  string
 	GenesisBlock *types.Block // used by block tests
+	TrustedMinersFile string
 	FastSync     bool
 	Olympic      bool
 
@@ -394,8 +395,23 @@ func New(config *Config) (*Ethereum, error) {
 	} else {
 		eth.pow = ethash.New()
 	}
+
+    trustedMiners := []common.Address{}
+    if len(config.TrustedMinersFile) > 0 {
+		fr, err := os.Open(config.TrustedMinersFile)
+		if err != nil {
+			return nil, err
+		}
+
+		trustedMiners, err := core.ReadTrustedMiners(fr)
+		if err != nil {
+			return nil, err
+		}
+		glog.V(logger.Info).Infof("Successfully read trusted miners: = %v\n", trustedMiners)
+	}
+
 	//genesis := core.GenesisBlock(uint64(config.GenesisNonce), stateDb)
-	eth.blockchain, err = core.NewBlockChain(chainDb, eth.pow, eth.EventMux())
+	eth.blockchain, err = core.NewBlockChain(chainDb, eth.pow, eth.EventMux(), trustedMiners)
 	if err != nil {
 		if err == core.ErrNoGenesis {
 			return nil, fmt.Errorf(`Genesis block not found. Please supply a genesis block with the "--genesis /path/to/file" argument`)

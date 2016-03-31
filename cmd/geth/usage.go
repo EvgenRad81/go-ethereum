@@ -67,6 +67,7 @@ var AppHelpFlagGroups = []flagGroup{
 			utils.TestNetFlag,
 			utils.DevModeFlag,
 			utils.GenesisFileFlag,
+			utils.TrustedMinersFileFlag,
 			utils.IdentityFlag,
 			utils.FastSyncFlag,
 			utils.LightKDFFlag,
