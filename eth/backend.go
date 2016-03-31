@@ -403,7 +403,7 @@ func New(config *Config) (*Ethereum, error) {
 			return nil, err
 		}
 
-		trustedMiners, err := core.ReadTrustedMiners(fr)
+		trustedMiners, err = core.ReadTrustedMiners(fr)
 		if err != nil {
 			return nil, err
 		}
