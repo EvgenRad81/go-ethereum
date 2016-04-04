@@ -1,3 +1,14 @@
+## Aira Ethereum Go
+
+This build of Ethereum Go client adds trusted miners. You can specify it in Json file, with argument --trusted-miners.
+
+Example: geth --trusted-miners trusted_miners.json
+
+Only addresses specified in file, be able to mine. Blocks from other miners could be rejected by net. 
+
+This build is designed for creating public-private blockchains.
+
+
 ## Ethereum Go
 
 Official golang implementation of the Ethereum protocol
